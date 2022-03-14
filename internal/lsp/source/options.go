@@ -362,6 +362,9 @@ type FormattingOptions struct {
 
 	// Gofumpt indicates if we should run gofumpt formatting.
 	Gofumpt bool
+
+	// Crlfmt indicates if we should run crlfmt formatting.
+	Crlfmt bool
 }
 
 type DiagnosticOptions struct {
@@ -483,6 +486,7 @@ type Hooks struct {
 	// gofumpt/format.Source. langVersion and modulePath are used for some
 	// Gofumpt formatting rules -- see the Gofumpt documentation for details.
 	GofumptFormat func(ctx context.Context, langVersion, modulePath string, src []byte) ([]byte, error)
+	CrlfmtFormat  func(ctx context.Context, src []byte) ([]byte, error)
 
 	DefaultAnalyzers     map[string]*Analyzer
 	TypeErrorAnalyzers   map[string]*Analyzer
@@ -715,6 +719,7 @@ func (o *Options) Clone() *Options {
 			StaticcheckSupported: o.StaticcheckSupported,
 			ComputeEdits:         o.ComputeEdits,
 			GofumptFormat:        o.GofumptFormat,
+			CrlfmtFormat:         o.CrlfmtFormat,
 			URLRegexp:            o.URLRegexp,
 			Govulncheck:          o.Govulncheck,
 		},
@@ -756,7 +761,9 @@ func (o *Options) Clone() *Options {
 	return result
 }
 
-func (o *Options) AddStaticcheckAnalyzer(a *analysis.Analyzer, enabled bool, severity protocol.DiagnosticSeverity) {
+func (o *Options) AddStaticcheckAnalyzer(
+	a *analysis.Analyzer, enabled bool, severity protocol.DiagnosticSeverity,
+) {
 	o.StaticcheckAnalyzers[a.Name] = &Analyzer{
 		Analyzer: a,
 		Enabled:  enabled,
@@ -952,6 +959,9 @@ func (o *Options) set(name string, value interface{}, seen map[string]struct{}) 
 
 	case "gofumpt":
 		result.setBool(&o.Gofumpt)
+
+	case "crlfmt":
+		result.setBool(&o.Crlfmt)
 
 	case "semanticTokens":
 		result.setBool(&o.SemanticTokens)

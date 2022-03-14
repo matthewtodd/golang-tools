@@ -8,7 +8,9 @@
 package hooks // import "golang.org/x/tools/gopls/internal/hooks"
 
 import (
+	"bytes"
 	"context"
+	"os/exec"
 
 	"golang.org/x/tools/gopls/internal/vulncheck"
 	"golang.org/x/tools/internal/lsp/source"
@@ -27,6 +29,16 @@ func Options(options *source.Options) {
 			LangVersion: langVersion,
 			ModulePath:  modulePath,
 		})
+	}
+	options.CrlfmtFormat = func(ctx context.Context, src []byte) ([]byte, error) {
+		var buf bytes.Buffer
+		cmd := exec.CommandContext(ctx, "crlfmt")
+		cmd.Stdin = bytes.NewBuffer(src)
+		cmd.Stdout = &buf
+		if err := cmd.Run(); err != nil {
+			return nil, err
+		}
+		return buf.Bytes(), nil
 	}
 	updateAnalyzers(options)
 

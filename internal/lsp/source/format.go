@@ -86,6 +86,13 @@ func Format(ctx context.Context, snapshot Snapshot, fh FileHandle) ([]protocol.T
 		}
 		formatted = string(b)
 	}
+	if format := snapshot.View().Options().Hooks.CrlfmtFormat; snapshot.View().Options().Crlfmt && format != nil {
+		b, err := format(ctx, buf.Bytes())
+		if err != nil {
+			return nil, err
+		}
+		formatted = string(b)
+	}
 	return computeTextEdits(ctx, snapshot, pgf, formatted)
 }
 
